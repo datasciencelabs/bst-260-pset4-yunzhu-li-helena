@@ -76,6 +76,7 @@ Hints: 1) Use the `resp_body_json` function. 2) The first row of the matrix will
 
 ```{r}
 population <- resp_body_json(response) |> do.call(rbind, args = _)
+head(population)
 ```
 
 6. Examine the `population` matrix you just created. Notice that 1) it is not tidy, 2) the column types are not what we want, and 3) the first row is a header. Convert `population` to a tidy dataset. Remove the state ID column and change the name of the column with state names to `state_name`. Add a column with state abbreviations called `state`. Make sure you assign the abbreviations for DC and PR correctly. Hint: Use the **janitor** package to make the first row the header. 
@@ -105,6 +106,7 @@ population <- population |>
     state_name == "Puerto Rico" ~ "PR",
     TRUE ~ state) 
     )
+head(population)
 ```
 
 7. As a check, make a barplot of states' 2021 and 2022 populations. Show the state names in the y-axis ordered by population size.  Hint: You will need to use `reorder` and use `facet_wrap`.
@@ -142,12 +144,16 @@ regions <-fromJSON(url)  |> unnest(states) |>     # unnest the states from list
   rename(state_name = states) |>  
   mutate(region = as.integer(region), state_name = as.character(state_name), region_name = ifelse(region_name == "New York and New Jersey, Puerto Rico, Virgin Islands", "NY, NJ, PE, VI", region_name))  |> # mutate and change the long region name
   filter(state_name %in% c(state.name, "District of Columbia", "Puerto Rico"))  |> select(state_name, region, region_name) 
+
+head(regions)
 ```
 
 9. Add a region and region name columns to the `population` data frame.
 
 ```{r}
 population <- population |> left_join(regions, by = "state_name")
+
+head(population)
 ```
 
 
@@ -157,6 +163,8 @@ population <- population |> left_join(regions, by = "state_name")
 ```{r}
 api <- "https://data.cdc.gov/resource/pwn4-m3yp.json"
 cases_raw <- request(api) |> req_perform() |> resp_body_json(simplifyDataFrame = TRUE)
+
+head(cases_raw)
 ```
 
 We see exactly 1,000 rows. We should be seeing over $52 \times 3$ rows per state.
@@ -169,6 +177,7 @@ api <- "https://data.cdc.gov/resource/pwn4-m3yp.json"
 cases_raw <- request(api) |>  req_url_query(`$limit` =10000000000) |> req_perform() |> resp_body_json(simplifyDataFrame = TRUE)
 
 cases <- cases_raw |> mutate(state = state, date = as.Date(end_date), cases = as.numeric(new_cases)) |> select(state, date, cases) |> filter(state %in% c(state.abb, "DC", "PR"), !is.na(cases), !is.na(date))
+
 head(cases)
 ```
 
@@ -211,6 +220,7 @@ Use **httr2** to download COVID-19 death data from this endpoint. Make sure to r
 deaths_raw <- request(deaths_url) |>  req_url_query(`$limit` =10000000000) |> req_perform() |> resp_body_json(simplifyDataFrame = TRUE)
 
 deaths <- as_tibble(deaths_raw) |> mutate(state = state, date = as.Date(end_date),  deaths = as.numeric(covid_19_deaths)) |> select(state, date, deaths) |> filter(state %in% population$state_name, !is.na(deaths), !is.na(date))
+
 head(deaths)
 ```
 
