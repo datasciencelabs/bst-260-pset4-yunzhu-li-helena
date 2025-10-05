@@ -138,9 +138,9 @@ points to a JSON file that lists the states in the 10 Public Health Service (PHS
 #| warning: false
 library(jsonlite)
 library(purrr)
-regions <-fromJSON(url)  |> unnest(states) |>                      
+regions <-fromJSON(url)  |> unnest(states) |>     # unnest the states from list                 
   rename(state_name = states) |>  
-  mutate(region = as.integer(region), state_name = as.character(state_name), region_name = ifelse(region_name == "New York and New Jersey, Puerto Rico, Virgin Islands", "NY, NJ, PE, VI", region_name))  |>
+  mutate(region = as.integer(region), state_name = as.character(state_name), region_name = ifelse(region_name == "New York and New Jersey, Puerto Rico, Virgin Islands", "NY, NJ, PE, VI", region_name))  |> # mutate and change the long region name
   filter(state_name %in% c(state.name, "District of Columbia", "Puerto Rico"))  |> select(state_name, region, region_name) 
 ```
 
@@ -180,7 +180,7 @@ library(lubridate)
 cases |> mutate(year = as.character(year(date))) |> # add a year column
   filter(year %in% c(2020, 2021)) |>
   left_join(population, by = c("state", "year")) |>  
-  filter(!is.na(region_name)) |> mutate(cases100k = (cases / population) *100000) |> 
+  filter(!is.na(region_name)) |> mutate(cases100k = (cases / population) *100000) |> # compute cases per 100,000
   ggplot(aes(x = date, y = cases100k, col = state)) + geom_line() + facet_wrap(~ region_name) +
   labs(title = "COVID-19 Cases Per 100,000 People (2020–2021)", x = "Date", y = "Cases per 100,000 People")
 
@@ -218,6 +218,7 @@ head(deaths)
 
 ```{r}
 deaths |> group_by(state) |> summarise(total_deaths = sum(deaths, na.rm = TRUE)) |> 
-  arrange(desc(total_deaths)) |> slice(1:10) |> ggplot(aes(x = reorder(state, total_deaths), y = total_deaths)) + coord_flip() + geom_col(fill = "lightblue") + geom_text(aes(label = scales::comma(total_deaths)), hjust = 1.1) + labs(
+  arrange(desc(total_deaths)) |> slice(1:10) |> # take top 10 based on total deaths
+  ggplot(aes(x = reorder(state, total_deaths), y = total_deaths)) + coord_flip() + geom_col(fill = "lightblue") + geom_text(aes(label = total_deaths), hjust = 1.1) + labs(
     title = "Top 10 States by Total COVID-19 Deaths", x = "State", y = "Total Deaths") 
 ```
